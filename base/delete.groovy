@@ -13,7 +13,7 @@ def port = input.get("port") ?: config.global("remedy.port")
 def connectorName = input.get("connector") ?: config.global("remedy.connector")
 def timeout = input.get("timeout") ?: config.global("remedy.timeout") ?: 5000
 def form = input.get("form")
-def query = input.get("query") ?: "1=1"
+def query = input.get("query") ?: "1!=1"
 
 
 // create auth string
@@ -37,11 +37,13 @@ def url = uriResponse.url
 
 //call connector
 def wResponse=call.connector(connectorName)
-         .set("method","get")
+         .set("method","delete")
          .set("url",url)
          .set("timeout",timeout)
          .set("headers", header_authorization, "Accept: */*")
          .sync()
+
+log.info ""+wResponse
 
 if (wResponse.body == null) {
   def message = "Remedy connection falied"

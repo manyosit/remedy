@@ -3,7 +3,6 @@ import groovy.json.*
 def start = new Date().getTime()
 def metaInfo = new HashMap()
 
-log.info("Start Remedy...")
 //Validate Input
 
 def username = input.get("username") ?: config.global("remedy.username")
