@@ -31,13 +31,10 @@ def uriResponse = call.bit("remedy:util:createURL.groovy")         // Provide pa
                       .set("arapi",arapi)
                       .set("port",port)
                       .set("form",form)
-                      .set("query",query)
                       .sync()
 
 def url = uriResponse.url
-
-//create Body
-
+log.info recordData
 //call connector
 def wResponse=call.connector(connectorName)
          .set("method","post")
@@ -46,8 +43,8 @@ def wResponse=call.connector(connectorName)
          .set("timeout",timeout)
          .set("headers", header_authorization, "Accept: */*")
          .sync()
-
-if (wResponse.exitcode != 0) {
+//Handle response
+if (wResponse.body == null) {
   def message = "Remedy connection falied"
   log.error message
   metaInfo.put("status", "error")
@@ -56,55 +53,14 @@ if (wResponse.exitcode != 0) {
   metaInfo.put("status", "success")
   metaInfo.put("message", "")
 
-  log.info ""+wResponse
-
   def myBody = wResponse.body
 
   def jsonSlurper = new JsonSlurper()
   def myJSON = jsonSlurper.parseText(myBody)
-  output.set("remedy",myJSON)
-  //Loop through all records
-  myJSON.keySet().each {
-    def myRecord = myJSON.get(it)
-    log.info "" + myRecord.keySet()
-    log.info myRecord.Description
-  }
-}
-//Create entry
-/*
-def myRecord = myJSON.get("000000000000001")
-log.info "" + myRecord.Description
-
-myJSON.each {
-  //def myEntry = jsonSlurper.parseText(it)
-  //log.info myEntry
-  log.info it.getClass().getSimpleName()
-  log.info it.getClass().getName()
-  log.info "" + it
+  output.set("data",myJSON)
+  metaInfo.put("size", myJSON.size())
 }
 
-wResponse=call.connector("OpenWheather")
-         .set("method","post")
-         .set("body", "{ \"refid01\": { \"Description\": \"Hi there\" } }")
-         .set("url",url)
-         .set("timeout",5000)*/
-         //.set("headers", "Authorization: Basic cmhhbm5lbWFubjpwYXNzd29yZA==", "Accept: */*")
-         /*.sync()
-
-         myBody = wResponse.body
-
-         log.info("Remedy " + myBody)
-
-/*
-log.info("Humidity" + myJSON.main.humidity)
-
-log.info "" + myJSON.weather
-log.info "" + myJSON.main
-log.info "" + myJSON.main.temp
-
-output.set("Wetter", "${myJSON.weather.main}")
-output.set("Temp", myJSON.main.temp.toString())
-*/
 log.info "done"
 def runtime = new Date().getTime() - start
 metaInfo.put("runtime", runtime)
