@@ -1,7 +1,8 @@
 ---
 title: Tasks
 taxonomy:
-    category: docs
+    category:
+        - docs
 ---
 
 Lorem markdownum vides aram est sui istis excipis Danai elusaque manu fores.
