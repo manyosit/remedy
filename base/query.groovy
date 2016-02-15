@@ -1,5 +1,7 @@
 import groovy.json.*
 
+log.debug "Start Remedy query"
+
 def start = new Date().getTime()
 def metaInfo = new HashMap()
 
@@ -56,10 +58,21 @@ if (wResponse.body == null) {
 
   def jsonSlurper = new JsonSlurper()
   def myJSON = jsonSlurper.parseText(myBody)
+
+  //Handle error with BigDecimal
+  myJSON.each {
+    def myValues = myJSON.get(it.getKey())
+    myValues.each { myValue ->
+      if (myValue.getValue().getClass().toString().equals("class java.math.BigDecimal"))
+        myValue.setValue(new Double(myValue.getValue().doubleValue()))
+    }
+  }
   output.set("data",myJSON)
   metaInfo.put("size", myJSON.size())
-
+  log.debug "Remedy query successful"
 }
+
 def runtime = new Date().getTime() - start
 metaInfo.put("runtime", runtime)
 output.set("meta",metaInfo)
+log.debug "Exit Remedy Query"
