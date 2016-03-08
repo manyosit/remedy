@@ -56,22 +56,23 @@ if (wResponse.body == null) {
 
   def myBody = wResponse.body
 
-log.debug "Remedy Response: " + myBody
+  log.debug "Got Remedy Response."
 
   def jsonSlurper = new JsonSlurper()
   def myJSON = jsonSlurper.parseText(myBody)
 
   //Handle error with BigDecimal
-  myJSON.each {
+  /*myJSON.each {
     def myValues = myJSON.get(it.getKey())
     myValues.each { myValue ->
       if (myValue.getValue().getClass().toString().equals("class java.math.BigDecimal"))
         myValue.setValue(new Double(myValue.getValue().doubleValue()))
     }
-  }
+  }*/
 
-log.debug "Remedy Response parsed. Set Output to: " + myJSON
-  output.set("data",myJSON)
+  log.debug "Remedy Response parsed."
+  //output.set("data",myJSON)
+  output.setraw("data",JsonOutput.toJson(myJSON))
   metaInfo.put("size", myJSON.size())
   log.debug "Remedy query successful"
 }

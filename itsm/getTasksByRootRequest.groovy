@@ -4,7 +4,7 @@ log.debug "Start Remedy query"
 
 def start = new Date().getTime()
 def metaInfo = new HashMap()
-def form = "CHG:Infrastructure Change"
+def form = "TMS:Task"
 def status = "error"
 def statusMessage = ""
 def size = 0
@@ -18,10 +18,10 @@ def arapi = input.get("arapi") ?: config.global("remedy.arapi")
 def port = input.get("port") ?: config.global("remedy.port")
 def connectorName = input.get("connector") ?: config.global("remedy.connector")
 def timeout = input.get("timeout") ?: config.global("remedy.timeout") ?: 5000
-def changeID = input.get("ChangeID") ?: "1"
+def rootRequestInstanceId = input.get("RootRequestInstanceID") ?: "1"
 
-def query = "'Infrastructure Change ID' = \"${changeID}\""
-
+def query = "'RootRequestInstanceID' = \"${rootRequestInstanceId}\""
+log.debug query
 // create auth string
 
 def queryResponse = call.bit("remedy:base:query.groovy")         // Provide path for flintbit
@@ -29,8 +29,8 @@ def queryResponse = call.bit("remedy:base:query.groovy")         // Provide path
                   .set("query", query)
                   .sync()
 
-if (queryResponse == null || queryResponse.data == null || queryResponse.meta.status == "error" || queryResponse.meta.size < 1) {
-  log.error "Something went wrong. Query for Change returned: " + queryResponse
+if (queryResponse == null || queryResponse.data == null || queryResponse.meta.status == "error") {
+  log.error "Something went wrong: " + queryResponse
   status = "error"
   size = 0
   if (queryResponse != null && queryResponse.meta != null && queryResponse.meta.message && queryResponse.meta.message != "") {
@@ -39,23 +39,14 @@ if (queryResponse == null || queryResponse.data == null || queryResponse.meta.st
 } else {
   size = queryResponse.data.size()
   status = "success"
-  //check for multiple responses
-  if (queryResponse.data.size() > 1) {
-    status = "warning"
-    statusMessage = "Ambiguous responses received. Used first response. Query: " + query
+
+  def tasks = new ArrayList()
+  queryResponse.data.keySet().each {
+    tasks.add(queryResponse.data.get(it))
   }
 
-  data = queryResponse.data.get(queryResponse.data.keySet().iterator().next())
-
-  def instanceId = data.InstanceId
-  log.debug "Get Tasks for Change."
-  //get tasks
-  def taskResponse = call.bit("remedy:itsm:getTasksByRootRequest.groovy")
-                    .set("RootRequestInstanceID", instanceId)
-                    .sync()
-
-  data.put("tasks", taskResponse.data.tasks)
-
+  data = new HashMap()
+  data.put("tasks", tasks)
   output.set("data", data)
 }
 
