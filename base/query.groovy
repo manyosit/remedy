@@ -56,6 +56,8 @@ if (wResponse.body == null) {
 
   def myBody = wResponse.body
 
+log.debug "Remedy Response: " + myBody
+
   def jsonSlurper = new JsonSlurper()
   def myJSON = jsonSlurper.parseText(myBody)
 
@@ -67,6 +69,8 @@ if (wResponse.body == null) {
         myValue.setValue(new Double(myValue.getValue().doubleValue()))
     }
   }
+
+log.debug "Remedy Response parsed. Set Output to: " + myJSON
   output.set("data",myJSON)
   metaInfo.put("size", myJSON.size())
   log.debug "Remedy query successful"

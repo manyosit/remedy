@@ -1,7 +1,10 @@
 ---
-title: Getting started
+title: 'Getting started'
+published: false
+visible: false
 taxonomy:
-    category: docs
+    category:
+        - docs
 ---
 
 ### Chapter 1
