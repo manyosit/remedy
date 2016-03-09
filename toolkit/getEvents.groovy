@@ -38,10 +38,16 @@ if (queryResponse == null || queryResponse.data == null || queryResponse.meta.st
 } else {
   size = queryResponse.data.size()
   status = "success"
-  //loop through events
+  //loop through events, call handler async
   queryResponse.data.keySet().each { myEventKey ->
     def myEvent = queryResponse.data.get(myEventKey)
-    log.debug "" + myEvent
+    try {
+      def eventResponse = call.bit("remedy:toolkit:handleEvent.groovy")
+                        .set("event", myEvent)
+                        .async()
+    } catch (Exception e) {
+      log.error "Error handling event " + myEvent + " -> " + e
+    }
   }
 
   //output.set("data", data)

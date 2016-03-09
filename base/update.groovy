@@ -42,6 +42,7 @@ def wResponse=call.connector(connectorName)
          .set("timeout",timeout)
          .set("headers", header_authorization, "Accept: */*")
          .sync()
+
 //Handle response
 if (wResponse.body == null) {
   def message = "Remedy connection falied"
