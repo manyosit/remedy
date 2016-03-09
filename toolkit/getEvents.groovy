@@ -38,15 +38,13 @@ if (queryResponse == null || queryResponse.data == null || queryResponse.meta.st
 } else {
   size = queryResponse.data.size()
   status = "success"
-  //check for multiple responses
-  if (queryResponse.data.size() > 1) {
-    status = "warning"
-    statusMessage = "Ambiguous responses received. Used first response. Query: " + query
+  //loop through events
+  queryResponse.data.keySet().each { myEventKey ->
+    def myEvent = queryResponse.data.get(myEventKey)
+    log.debug "" + myEvent
   }
 
-  data = queryResponse.data.get(queryResponse.data.keySet().iterator().next())
-
-  output.set("data", data)
+  //output.set("data", data)
 }
 
 def runtime = new Date().getTime() - start
