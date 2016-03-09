@@ -21,35 +21,34 @@ def timeout = input.get("timeout") ?: config.global("remedy.timeout") ?: 5000
 def maxEntries = input.get("maxEntries") ?: config.global("remedy.toolkit.maxEntries") ?: 60
 def myEvent = input.get("event")
 
+def writeData = { recordData ->
+  call.bit("remedy:base:update.groovy")         // Provide path for flintbit
+      .set("form", form) // Set arguments
+      .set("data", JsonOutput.toJson(recordData))
+      .sync()
+}
+
 //Update Event Record
 def recordDataSet = ["ExecutionLog" : "Event execution started.", "Status" : "InProgress"]
 def completeRecord = ["${myEvent.RequestId}" : recordDataSet]
 
-def updateResponse = call.bit("remedy:base:update.groovy")         // Provide path for flintbit
-                    .set("form", form) // Set arguments
-                    .set("data", JsonOutput.toJson(completeRecord))
-                    .sync()
+writeData(completeRecord)
+
 //Execute Event
 try {
-
+  log.debug "Call Flintbit " + myEvent.ExecutionObject
   //throw new IllegalArgumentException( "Kein Alter <= 0 erlaubt!" )
-
+  call.bit(myEvent.ExecutionObject)
+      .sync()
 } catch (Exception e) {
   log.error "Error handling event " + myEvent + " -> " + e
   def errorRecord = ["${myEvent.RequestId}" : ["ExecutionLog" : "Event error: " + e, "Status" : "Error"]]
-
-  call.bit("remedy:base:update.groovy")         // Provide path for flintbit
-      .set("form", form) // Set arguments
-      .set("data", JsonOutput.toJson(errorRecord))
-      .sync()
+  writeData(errorRecord)
 }
 
 def completedRecord = ["${myEvent.RequestId}" : ["ExecutionLog" : "Event execution completed", "Status" : "Completed"]]
 
-call.bit("remedy:base:update.groovy")         // Provide path for flintbit
-    .set("form", form) // Set arguments
-    .set("data", JsonOutput.toJson(completedRecord))
-    .sync()
+writeData(completedRecord)
 
 def runtime = new Date().getTime() - start
 metaInfo.put("size", size)

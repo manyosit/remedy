@@ -1,5 +1,7 @@
 import groovy.json.*
 
+log.debug "Start Record update"
+
 def start = new Date().getTime()
 def metaInfo = new HashMap()
 
@@ -33,7 +35,7 @@ def uriResponse = call.bit("remedy:util:createURL.groovy")         // Provide pa
                       .sync()
 
 def url = uriResponse.url
-log.info recordData
+
 //call connector
 def wResponse=call.connector(connectorName)
          .set("method","put")
@@ -61,7 +63,7 @@ if (wResponse.body == null) {
   metaInfo.put("size", myJSON.size())
 }
 
-log.info "done"
+log.debug "Record update complete"
 def runtime = new Date().getTime() - start
 metaInfo.put("runtime", runtime)
 output.set("meta",metaInfo)

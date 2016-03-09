@@ -28,7 +28,7 @@ def queryResponse = call.bit("remedy:base:query.groovy")
                   .set("maxEntries", maxEntries)
                   .sync()
 
-if (queryResponse == null || queryResponse.data == null || queryResponse.meta.status == "error" || queryResponse.meta.size < 1) {
+if (queryResponse == null || queryResponse.data == null || queryResponse.meta.status == "error") {
   log.error "Something went wrong. Query for Change returned: " + queryResponse
   status = "error"
   size = 0
@@ -38,6 +38,8 @@ if (queryResponse == null || queryResponse.data == null || queryResponse.meta.st
 } else {
   size = queryResponse.data.size()
   status = "success"
+  if (queryResponse.meta.size < 1)
+    statusMessage = "Nothing to do. Maybe next time."
   //loop through events, call handler async
   queryResponse.data.keySet().each { myEventKey ->
     def myEvent = queryResponse.data.get(myEventKey)
