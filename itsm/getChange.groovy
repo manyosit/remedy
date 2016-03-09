@@ -18,13 +18,21 @@ def arapi = input.get("arapi") ?: config.global("remedy.arapi")
 def port = input.get("port") ?: config.global("remedy.port")
 def connectorName = input.get("connector") ?: config.global("remedy.connector")
 def timeout = input.get("timeout") ?: config.global("remedy.timeout") ?: 5000
-def changeID = input.get("ChangeID") ?: "1"
+Boolean getTasks = input.get("getTasks")?.equalsIgnoreCase("true") ?: config.global("remedy.change.getTasks")?.equalsIgnoreCase("true") ?: false
+def query = ""
 
-def query = "'Infrastructure Change ID' = \"${changeID}\""
+//Check if query by InstanceID or by ChangeID
+if (input.get("InstanceId")) {
+  query = "'InstanceId' = \"" + input.get("InstanceId") + "\""
+} else {
+  def changeID = input.get("ChangeId") ?: "1"
+  query = "'Infrastructure Change ID' = \"${changeID}\""
+}
 
-// create auth string
+log.debug "Get Tasks: " + getTasks
 
-def queryResponse = call.bit("remedy:base:query.groovy")         // Provide path for flintbit
+// query remedy
+def queryResponse = call.bit("remedy:base:query.groovy")
                   .set("form",form) // Set arguments
                   .set("query", query)
                   .sync()
@@ -47,14 +55,16 @@ if (queryResponse == null || queryResponse.data == null || queryResponse.meta.st
 
   data = queryResponse.data.get(queryResponse.data.keySet().iterator().next())
 
-  def instanceId = data.InstanceId
-  log.debug "Get Tasks for Change."
-  //get tasks
-  def taskResponse = call.bit("remedy:itsm:getTasksByRootRequest.groovy")
-                    .set("RootRequestInstanceID", instanceId)
-                    .sync()
+  if (getTasks == true) {
+    def instanceId = data.InstanceId
+    log.debug "Get Tasks for Change."
+    //get tasks
+    def taskResponse = call.bit("remedy:itsm:getTasksByRootRequest.groovy")
+                      .set("RootRequestInstanceID", instanceId)
+                      .sync()
 
-  data.put("tasks", taskResponse.data.tasks)
+    data.put("tasks", taskResponse.data.tasks)
+  }
 
   output.set("data", data)
 }
