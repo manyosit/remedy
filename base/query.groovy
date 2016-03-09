@@ -16,7 +16,7 @@ def connectorName = input.get("connector") ?: config.global("remedy.connector")
 def timeout = input.get("timeout") ?: config.global("remedy.timeout") ?: 5000
 def form = input.get("form")
 def query = input.get("query") ?: "1=1"
-
+def maxEntries = input.get("maxEntries") ?: 0
 
 // create auth string
 def authResponse = call.bit("remedy:util:authorization.groovy")         // Provide path for flintbit
@@ -33,6 +33,7 @@ def uriResponse = call.bit("remedy:util:createURL.groovy")         // Provide pa
                       .set("port",port)
                       .set("form",form)
                       .set("query",query)
+                      .set("maxEntries", maxEntries)
                       .sync()
 
 def url = uriResponse.url
