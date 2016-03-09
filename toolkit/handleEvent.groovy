@@ -22,8 +22,8 @@ def maxEntries = input.get("maxEntries") ?: config.global("remedy.toolkit.maxEnt
 def myEvent = input.get("event")
 
 def writeData = { recordData ->
-  call.bit("remedy:base:update.groovy")         // Provide path for flintbit
-      .set("form", form) // Set arguments
+  call.bit("remedy:base:update.groovy")
+      .set("form", form)
       .set("data", JsonOutput.toJson(recordData))
       .sync()
 }
@@ -37,8 +37,10 @@ writeData(completeRecord)
 //Execute Event
 try {
   log.debug "Call Flintbit " + myEvent.ExecutionObject
+  def eventData = ["RequestNumber" : myEvent.RequestNumber, "RequestInstanceId" : myEvent.RequestInstanceId, "RequestType" : myEvent.RequestType]
   //throw new IllegalArgumentException( "Kein Alter <= 0 erlaubt!" )
   call.bit(myEvent.ExecutionObject)
+      .set("eventData", eventData)
       .sync()
 } catch (Exception e) {
   log.error "Error handling event " + myEvent + " -> " + e

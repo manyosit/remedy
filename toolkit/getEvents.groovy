@@ -44,15 +44,14 @@ if (queryResponse == null || queryResponse.data == null || queryResponse.meta.st
   queryResponse.data.keySet().each { myEventKey ->
     def myEvent = queryResponse.data.get(myEventKey)
     try {
-      def eventResponse = call.bit("remedy:toolkit:handleEvent.groovy")
-                        .set("event", myEvent)
-                        .async()
+      call.bit("remedy:toolkit:handleEvent.groovy")
+          .set("event", myEvent)
+          .async()
     } catch (Exception e) {
       log.error "Error handling event " + myEvent + " -> " + e
     }
   }
 
-  //output.set("data", data)
 }
 
 def runtime = new Date().getTime() - start
