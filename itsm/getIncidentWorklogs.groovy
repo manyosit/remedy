@@ -4,7 +4,7 @@ log.debug "Start Remedy query"
 
 def start = new Date().getTime()
 def metaInfo = new HashMap()
-def form = "CHG:Infrastructure Change"
+def form = "HPD:WorkLog"
 def status = "error"
 def statusMessage = ""
 def size = 0
@@ -25,8 +25,8 @@ def query = ""
 if (input.get("InstanceId")) {
   query = "'InstanceId' = \"" + input.get("InstanceId") + "\""
 } else {
-  def changeID = input.get("ChangeId") ?: "1"
-  query = "'Infrastructure Change ID' = \"${changeID}\""
+  def incidentID = input.get("IncidentId") ?: "1"
+  query = "'Incident Number' = \"${incidentID}\""
 }
 
 log.debug "Get Tasks: " + getTasks
@@ -45,7 +45,7 @@ def queryResponse = call.bit("remedy:base:query.groovy")
                         .sync()
 
 if (queryResponse == null || queryResponse.data == null || queryResponse.meta.status == "error" || queryResponse.meta.size < 1) {
-  log.error "Something went wrong. Query for Change returned: " + queryResponse
+  log.error "Something went wrong. Query for Incident returned: " + queryResponse
   status = "error"
   size = 0
   if (queryResponse != null && queryResponse.meta != null && queryResponse.meta.message && queryResponse.meta.message != "") {
@@ -55,32 +55,15 @@ if (queryResponse == null || queryResponse.data == null || queryResponse.meta.st
   size = queryResponse.data.size()
   status = "success"
   //check for multiple responses
-  if (queryResponse.data.size() > 1) {
-    status = "warning"
-    statusMessage = "Ambiguous responses received. Used first response. Query: " + query
+  def worklogs = new ArrayList()
+  queryResponse.data.keySet().each {
+    worklogs.add(queryResponse.data.get(it))
   }
 
-  data = queryResponse.data.get(queryResponse.data.keySet().iterator().next())
-
-  if (getTasks == true) {
-    def instanceId = data.InstanceId
-    log.debug "Get Tasks for Change."
-    //get tasks
-    def taskResponse = call.bit("remedy:itsm:getTasksByRootRequest.groovy")
-                      .set("RootRequestInstanceID", instanceId)
-                      .set("server",server) // Set arguments
-                      .set("arapi",arapi)
-                      .set("port",port)
-                      .set("username",username)
-                      .set("password",password)
-                      .set("timeout",timeout)
-                      .set("connector", connectorName)
-                      .sync()
-
-    data.put("tasks", taskResponse.data.tasks)
-  }
-
+  data = new HashMap()
+  data.put("worklogs", worklogs)
   output.set("data", data)
+
 }
 
 def runtime = new Date().getTime() - start

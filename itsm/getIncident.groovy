@@ -4,7 +4,7 @@ log.debug "Start Remedy query"
 
 def start = new Date().getTime()
 def metaInfo = new HashMap()
-def form = "CHG:Infrastructure Change"
+def form = "HPD:Help Desk"
 def status = "error"
 def statusMessage = ""
 def size = 0
@@ -25,8 +25,8 @@ def query = ""
 if (input.get("InstanceId")) {
   query = "'InstanceId' = \"" + input.get("InstanceId") + "\""
 } else {
-  def changeID = input.get("ChangeId") ?: "1"
-  query = "'Infrastructure Change ID' = \"${changeID}\""
+  def incidentID = input.get("IncidentId") ?: "1"
+  query = "'Incident Number' = \"${incidentID}\""
 }
 
 log.debug "Get Tasks: " + getTasks
@@ -45,7 +45,7 @@ def queryResponse = call.bit("remedy:base:query.groovy")
                         .sync()
 
 if (queryResponse == null || queryResponse.data == null || queryResponse.meta.status == "error" || queryResponse.meta.size < 1) {
-  log.error "Something went wrong. Query for Change returned: " + queryResponse
+  log.error "Something went wrong. Query for Incident returned: " + queryResponse
   status = "error"
   size = 0
   if (queryResponse != null && queryResponse.meta != null && queryResponse.meta.message && queryResponse.meta.message != "") {
@@ -64,18 +64,18 @@ if (queryResponse == null || queryResponse.data == null || queryResponse.meta.st
 
   if (getTasks == true) {
     def instanceId = data.InstanceId
-    log.debug "Get Tasks for Change."
+    log.debug "Get Tasks for Incident."
     //get tasks
     def taskResponse = call.bit("remedy:itsm:getTasksByRootRequest.groovy")
-                      .set("RootRequestInstanceID", instanceId)
-                      .set("server",server) // Set arguments
-                      .set("arapi",arapi)
-                      .set("port",port)
-                      .set("username",username)
-                      .set("password",password)
-                      .set("timeout",timeout)
-                      .set("connector", connectorName)
-                      .sync()
+                            .set("RootRequestInstanceID", instanceId)
+                            .set("server",server) // Set arguments
+                            .set("arapi",arapi)
+                            .set("port",port)
+                            .set("username",username)
+                            .set("password",password)
+                            .set("timeout",timeout)
+                            .set("connector", connectorName)
+                            .sync()
 
     data.put("tasks", taskResponse.data.tasks)
   }

@@ -40,6 +40,8 @@ if (queryResponse == null || queryResponse.data == null || queryResponse.meta.st
   status = "success"
   if (queryResponse.meta.size < 1)
     statusMessage = "Nothing to do. Maybe next time."
+  else
+    statusMessage = "Created " + queryResponse.data.size() + " events"
   //loop through events, call handler async
   queryResponse.data.keySet().each { myEventKey ->
     def myEvent = queryResponse.data.get(myEventKey)
@@ -53,6 +55,8 @@ if (queryResponse == null || queryResponse.data == null || queryResponse.meta.st
   }
 
 }
+
+log.debug "Event Scheduler completed with: " + statusMessage
 
 def runtime = new Date().getTime() - start
 metaInfo.put("size", size)
