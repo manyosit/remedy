@@ -18,18 +18,25 @@ def arapi = input.get("arapi") ?: config.global("remedy.arapi")
 def port = input.get("port") ?: config.global("remedy.port")
 def connectorName = input.get("connector") ?: config.global("remedy.connector")
 def timeout = input.get("timeout") ?: config.global("remedy.timeout") ?: 5000
-def query = ""
+def incidentID = input.get("IncidentId")
+def workLogType = input.get("workLogType") ?: "General Information"
+def workLogText = input.get("workLogText") ?: "N/A"
+def workLogCommunication = input.get("workLogCommunication") ?: "Inbound"
+def workLogViewAccess = input.get("workLogViewAccess") ?: "Internal"
+
 
 //Check if query by InstanceID or by ChangeID
-if (input.get("InstanceId")) {
-  query = "'InstanceId' = \"" + input.get("InstanceId") + "\""
-} else {
-  def incidentID = input.get("IncidentId") ?: "1"
-  query = "'Incident Number' = \"${incidentID}\""
-}
+
+def recordDataSet = ["Communication Type": "Inbound",
+                    "Description":"${workLogText}",
+                    "Incident Number": "${incidentID}",
+                    "View Access" : "${workLogViewAccess}",
+                    "Work Log Type": "${workLogType}",
+                    "Status" : "Enabled"]
+def completeRecord = ["${incidentID}" : recordDataSet]
 
 // query remedy
-def queryResponse = call.bit("remedy:base:query.groovy")
+def queryResponse = call.bit("remedy:base:create.groovy")
                         .set("server",server) // Set arguments
                         .set("arapi",arapi)
                         .set("port",port)
@@ -37,11 +44,11 @@ def queryResponse = call.bit("remedy:base:query.groovy")
                         .set("password",password)
                         .set("timeout",timeout)
                         .set("connector", connectorName)
-                        .set("form",form) // Set arguments
-                        .set("query", query)
+                        .set("form",form)
+                        .set("data", JsonOutput.toJson(completeRecord))
                         .sync()
 
-if (queryResponse == null || queryResponse.data == null || queryResponse.meta.status == "error" || queryResponse.meta.size < 1) {
+/*if (queryResponse == null || queryResponse.data == null || queryResponse.meta.status == "error" || queryResponse.meta.size < 1) {
   log.error "Something went wrong. Query for Incident returned: " + queryResponse
   status = "error"
   size = 0
@@ -61,7 +68,7 @@ if (queryResponse == null || queryResponse.data == null || queryResponse.meta.st
   data.put("worklogs", worklogs)
   output.set("data", data)
 
-}
+}*/
 
 def runtime = new Date().getTime() - start
 metaInfo.put("size", size)
